@@ -1,0 +1,23 @@
+{
+  // 关闭 cpptools 自带 IntelliSense，避免与 clangd 冲突（双红线/双补全）
+  "C_Cpp.intelliSenseEngine": "disabled",
+
+  // 让 .cu/.cuh 被识别为 CUDA C++，clangd 才会对其激活
+  "files.associations": {
+    "*.cu": "cuda-cpp",
+    "*.cuh": "cuda-cpp"
+  },
+
+  // clangd 语言服务器参数
+  "clangd.arguments": [
+    "--background-index",
+    "--header-insertion=never",
+    "--clang-tidy=false",
+    "--completion-style=detailed",
+    "--pch-storage=memory",
+    "-j=8"
+  ],
+
+  // 打开编辑器内联提示（配合 .clangd 里的 InlayHints）
+  "editor.inlayHints.enabled": "on"
+}

@@ -1,0 +1,66 @@
+CompileFlags:
+  # Add include paths and arch defines that clang needs
+  Add:
+    - "-xcuda" # Force parsing as CUDA
+    - "--cuda-gpu-arch=sm_90a" # Change to match your real GPU arch (e.g. sm_80, sm_90a)
+    - "--std=c++17"
+    - "-I/usr/local/cuda/include" # CUDA system headers
+    - "-I/mnt/tmpnfs/yang.wang/cutlass_dev/include" # Project headers
+    - "-I/mnt/tmpnfs/yang.wang/cutlass_dev/tools/util/include" # CUTLASS util headers
+    # Base version macros (aligned to CUDA 12.9 / Blackwell)
+    - "-D__CUDACC_VER_MAJOR__=12"
+    - "-D__CUDACC_VER_MINOR__=9"
+    - "-D__CUDA_ARCH__=1000" # Align to Blackwell SM100 so SM100 device blocks stay active (not grayed)
+    - "-D__CUDA_ARCH_FEAT_SM100_ALL=1"
+
+    # ---- Arch _SUPPORTED macros (host-side availability, non-conflicting, all enabled) ----
+    # When clangd parses as clang-cuda, CUTLASS_CLANG_CUDA=1, which disables every
+    # "#if !CUTLASS_CLANG_CUDA" new-arch branch in config.h (code gets grayed out).
+    # We define them manually here. SM70/75/80/90 have no clang guard and need no
+    # override (adding them could cause macro redefinition).
+    - "-DCUTLASS_ARCH_MMA_SM100_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM100F_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM101_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM101F_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM103_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM103F_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM110_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM110F_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM120_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM120F_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM121_SUPPORTED=1"
+    - "-DCUTLASS_ARCH_MMA_SM121F_SUPPORTED=1"
+
+    # ---- Device _ENABLED macros: only the target SM100 family ----
+    # These are keyed on strict __CUDA_ARCH__ equality and are mutually exclusive;
+    # enabling multiple arches at once activates several device kernel paths and
+    # causes conflicts/red squiggles. Change these when switching target arch.
+    - "-DCUTLASS_ARCH_MMA_SM100_ENABLED=1"
+    - "-DCUTLASS_ARCH_MMA_SM100A_ENABLED=1"
+    - "-DCUTLASS_ARCH_MMA_SM100F_ENABLED=1"
+
+  # Strip nvcc-only flags that clang cannot understand (prevents parse failures)
+  Remove:
+    - "-Xfatbin*"
+    - "-gencode*"
+    - "--generate-code*"
+    - "-ccbin*"
+    - "--expt-extended-lambda"
+    - "--expt-relaxed-constexpr"
+    - "-forward-unknown-to-host-compiler"
+
+Diagnostics:
+  # Suppress specific false-positive warnings
+  Suppress:
+    - "variadic_device_fn"
+    - "attributes_not_allowed"
+
+# On hover, expand CUTLASS template aliases to their full underlying type
+Hover:
+  ShowAKA: Yes
+
+# Inlay hints: show deduced auto types and parameter names for easier template reading
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
